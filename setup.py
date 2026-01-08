@@ -3,33 +3,79 @@
 # GRAPHDECO research group, https://team.inria.fr/graphdeco
 # All rights reserved.
 #
-# This software is free for non-commercial, research and evaluation use 
+# This software is free for non-commercial, research and evaluation use
 # under the terms of the LICENSE.md file.
 #
 # For inquiries contact  george.drettakis@inria.fr
 #
 
-from setuptools import setup
-from torch.utils.cpp_extension import CUDAExtension, BuildExtension
-import os
-os.path.dirname(os.path.abspath(__file__))
+from setuptools import setup, find_packages
+from pathlib import Path
+
+# Read README for long description
+this_directory = Path(__file__).parent
+try:
+    long_description = (this_directory / "README.md").read_text()
+except FileNotFoundError:
+    long_description = "Differentiable rasterizer for 2D Gaussian Splatting"
 
 setup(
     name="diff_surfel_rasterization",
-    packages=['diff_surfel_rasterization'],
-    version='0.0.1',
-    ext_modules=[
-        CUDAExtension(
-            name="diff_surfel_rasterization._C",
-            sources=[
-            "cuda_rasterizer/rasterizer_impl.cu",
-            "cuda_rasterizer/forward.cu",
-            "cuda_rasterizer/backward.cu",
-            "rasterize_points.cu",
-            "ext.cpp"],
-            extra_compile_args={"nvcc": ["-I" + os.path.join(os.path.dirname(os.path.abspath(__file__)), "third_party/glm/")]})
+    version="0.1.0",
+    author="Binbin Huang",
+    description="Differentiable rasterizer for 2D Gaussian Splatting",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    url="https://github.com/Tordjx/diff-surfel-rasterization",
+    # Find the diff_surfel_rasterization package
+    packages=find_packages(),
+    # Include all source files (.cu, .cpp, .h) for JIT compilation
+    package_data={
+        "": [
+            "*.cu",
+            "*.cpp",
+            "*.h",
+            "*.cuh",
+            "cuda_rasterizer/*.cu",
+            "cuda_rasterizer/*.h",
+            "cuda_rasterizer/*.cuh",
         ],
-    cmdclass={
-        'build_ext': BuildExtension
-    }
+    },
+    # Also include source files at repo root level
+    # These will be accessible from Path(__file__).parent.parent in __init__.py
+    data_files=[
+        (
+            ".",
+            [
+                "ext.cpp",
+                # Add any root-level .cu files here
+            ],
+        ),
+        (
+            "cuda_rasterizer",
+            [
+                # List cuda_rasterizer files if they're at repo root
+            ],
+        ),
+    ],
+    include_package_data=True,
+    # Dependencies
+    python_requires=">=3.7",
+    install_requires=[
+        "torch>=1.13.0",
+        "ninja",  # For faster JIT compilation
+    ],
+    # Classifiers
+    classifiers=[
+        "Development Status :: 4 - Beta",
+        "Intended Audience :: Science/Research",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: C++",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    ],
 )
